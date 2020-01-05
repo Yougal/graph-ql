@@ -3,6 +3,7 @@ package com.yougal.service;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -13,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import com.yougal.entity.Country;
 import com.yougal.entity.Department;
 import com.yougal.entity.Employee;
 import com.yougal.entity.JobHistory;
 import com.yougal.entity.Location;
+import com.yougal.repository.CountryRepository;
 import com.yougal.repository.EmployeeRepository;
 import com.yougal.repository.LocationRepository;
 
@@ -42,7 +45,10 @@ public class EmployeeServiceImpl implements EmployeeService{
 	@Autowired
 	private LocationRepository locationRepository;
 	
-	private GraphQLSchema graphQLSchema;
+	@Autowired
+	private CountryRepository countryRepository;
+	
+	private GraphQL graphQLSchema;
 	
 	@PersistenceContext
 	EntityManager entityManager;
@@ -83,12 +89,35 @@ public class EmployeeServiceImpl implements EmployeeService{
                 return null;
             }
         };
+        
+        DataFetcher<Location> locationMutator = new DataFetcher<Location>() {
+            @Override
+            public Location get(DataFetchingEnvironment environment) {
+                @SuppressWarnings("unchecked")
+				Map<String, String> object = (Map<String, String>)environment.getArguments().get("location");
+                String countryName = object.get("countryName");
+				if (countryName  != null) {
+                	Country country = countryRepository.findByCountryNameIgnoreCase(countryName);
+                	if(country==null) {
+                		throw new IllegalArgumentException("Invalid Country Exception: " + countryName);
+                	}
+                	Location location = new Location(
+                							object.get("city"),
+                							object.get("postalCode"),
+                							object.get("stateProvince"),
+                							object.get("streetAddress"));
+                	location.setCountry(country);
+                	return locationRepository.save(location);
+                }
+                return null;
+            }
+        };
     
-	 RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring().type("Query", 
-			 												builder->builder.dataFetcher("employee", employeeFetcherByName)
-			 												.dataFetcher("location", locationFetcherByCity)
-			 												.dataFetcher("employeeByTitle", employeeFetcherByTitle)
-			 											  )
+        RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring()
+        				.type("Query", 	  builder->builder.dataFetcher("employee", employeeFetcherByName)
+		 											   .dataFetcher("location", locationFetcherByCity)
+		 											   .dataFetcher("employeeByTitle", employeeFetcherByTitle))
+        				.type("Mutation", builder->builder.dataFetcher("createLocation", locationMutator))
 			 			.type("EmployeeType",  builder->builder.dataFetcher("jobHistories", (DataFetchingEnvironment environment)->{
 						                			return ((Employee)environment.getSource()).getJobHistories();
 						 						}))
@@ -97,19 +126,27 @@ public class EmployeeServiceImpl implements EmployeeService{
 			 											.dataFetcher("job", (DataFetchingEnvironment environment)->((JobHistory)environment.getSource()).getJob()))
 			 			.type("DepartmentType",builder->builder.dataFetcher("location",(DataFetchingEnvironment environment)->((Department)environment.getSource()).getLocation()))
 			 			.type("LocationType",builder->builder.dataFetcher("employees",(DataFetchingEnvironment environment)->((Location)environment.getSource()).getDepartments()
-			 					.stream().map(f->f.getEmployees()).flatMap(f->f.stream()).collect(Collectors.toList())))
+			 																		  .stream().map(f->f.getEmployees()).flatMap(f->f.stream()).collect(Collectors.toList()))
+			 												  .dataFetcher("country", (DataFetchingEnvironment environment)->((Location)environment.getSource()).getCountry()))
+			 			
                 	.build();
 
         SchemaGenerator schemaGenerator = new SchemaGenerator();
-        graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        GraphQLSchema graphQLExecSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+        graphQLSchema = GraphQL.newGraphQL(graphQLExecSchema).build();
 	}
 	
 	@Transactional
 	public ExecutionResult executeQuery(HashMap<String, Object> variables, String query){
-		entityManager.createNativeQuery("select 1 from dual");
-	    GraphQL build = GraphQL.newGraphQL(graphQLSchema).build();
-		return build.execute(ExecutionInput.newExecutionInput()
+		return graphQLSchema.execute(ExecutionInput.newExecutionInput()
 											.query(query)
+											.variables(variables));
+	}
+	
+	@Transactional
+	public ExecutionResult executeMutation(HashMap<String, Object> variables, String mutationQuery){
+		return graphQLSchema.execute(ExecutionInput.newExecutionInput()
+											.query(mutationQuery)
 											.variables(variables));
 	}
 

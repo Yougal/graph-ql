@@ -1,0 +1,11 @@
+mutation($location: LocationInput!){
+	createLocation(location : $location){
+			city 
+			postalCode 
+			stateProvince
+			streetAddress
+			country{
+				countryName
+			}
+	}
+}

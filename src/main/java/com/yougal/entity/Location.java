@@ -16,9 +16,10 @@ public class Location implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE,generator = "LOCATIONS_SEQ_Generator")
+	@SequenceGenerator(name = "LOCATIONS_SEQ_Generator",sequenceName = "LOCATIONS_SEQ", allocationSize = 100)
 	@Column(name="LOCATION_ID")
-	private long locationId;
+	private Long locationId;
 
 	private String city;
 
@@ -43,11 +44,19 @@ public class Location implements Serializable {
 	public Location() {
 	}
 
-	public long getLocationId() {
+	public Location(String city, String postalCode, String stateProvince, String streetAddress) {
+		super();
+		this.city = city;
+		this.postalCode = postalCode;
+		this.stateProvince = stateProvince;
+		this.streetAddress = streetAddress;
+	}
+
+	public Long getLocationId() {
 		return this.locationId;
 	}
 
-	public void setLocationId(long locationId) {
+	public void setLocationId(Long locationId) {
 		this.locationId = locationId;
 	}
 

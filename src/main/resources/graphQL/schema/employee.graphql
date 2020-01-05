@@ -30,12 +30,29 @@ type LocationType{
 	postalCode: String 
 	stateProvince: String
 	streetAddress: String
+	country: CountryType
 	departments: [DepartmentType]
 	employees: [EmployeeType]
+}
+
+type CountryType{
+	countryName: String
 }
 
 type Query {
 	employee(name: String): EmployeeType,
 	location(city: String): [LocationType],
 	employeeByTitle(title: String): [EmployeeType]
+}
+
+input LocationInput{
+	city: String 
+	postalCode: String 
+	stateProvince: String
+	streetAddress: String
+	countryName: String
+}
+
+type Mutation{
+	createLocation(location: LocationInput!): LocationType
 }
