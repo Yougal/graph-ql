@@ -1,0 +1,41 @@
+type EmployeeType{
+	firstName: String 
+	phoneNumber: String 
+	email: String 
+	jobHistories: [JobHistoryType]
+}
+
+type JobHistoryType{
+	job: Job 
+	endDate: String 
+	department: DepartmentType 
+}
+
+type Job{
+	jobTitle: String 
+	id: ID
+	maxSalary: Float 
+	minSalary: Float 
+}
+
+type DepartmentType{
+	id: ID
+	departmentName: String 
+	location: LocationType 
+	employees: [EmployeeType]
+}
+
+type LocationType{
+	city: String 
+	postalCode: String 
+	stateProvince: String
+	streetAddress: String
+	departments: [DepartmentType]
+	employees: [EmployeeType]
+}
+
+type Query {
+	employee(name: String): EmployeeType,
+	jobHistories(employeeId: ID): [JobHistoryType],
+	location(city: String): [LocationType]
+}

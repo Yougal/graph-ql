@@ -1,0 +1,22 @@
+{
+employee(name : "Neena"){
+        	firstName
+        	phoneNumber
+        	jobHistories{
+        		job{
+        			jobTitle
+					maxSalary 
+					minSalary 
+        		} 
+				endDate 
+				department{
+					departmentName 
+					location{
+						city 
+						postalCode 
+						stateProvince
+					}
+				}
+        	}
+   }
+}

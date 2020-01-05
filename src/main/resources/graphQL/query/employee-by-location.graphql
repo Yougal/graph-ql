@@ -1,0 +1,11 @@
+{
+location(city : "Seattle"){
+	city
+	streetAddress
+	employees{
+		firstName 
+		phoneNumber
+		email
+	}
+}
+}
