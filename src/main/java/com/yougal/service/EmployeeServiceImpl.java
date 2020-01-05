@@ -72,10 +72,22 @@ public class EmployeeServiceImpl implements EmployeeService{
                 return null;
             }
         };
+        
+        DataFetcher<List<Employee>> employeeFetcherByTitle = new DataFetcher<List<Employee>>() {
+            @Override
+            public List<Employee> get(DataFetchingEnvironment environment) {
+                String name = (String)environment.getVariables().get("title");
+                if (name != null) {
+                	return employeeRepository.findByTitle(name);
+                }
+                return null;
+            }
+        };
     
 	 RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring().type("Query", 
 			 												builder->builder.dataFetcher("employee", employeeFetcherByName)
 			 												.dataFetcher("location", locationFetcherByCity)
+			 												.dataFetcher("employeeByTitle", employeeFetcherByTitle)
 			 											  )
 			 			.type("EmployeeType",  builder->builder.dataFetcher("jobHistories", (DataFetchingEnvironment environment)->{
 						                			return ((Employee)environment.getSource()).getJobHistories();

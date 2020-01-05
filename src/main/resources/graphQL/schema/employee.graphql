@@ -36,6 +36,6 @@ type LocationType{
 
 type Query {
 	employee(name: String): EmployeeType,
-	jobHistories(employeeId: ID): [JobHistoryType],
-	location(city: String): [LocationType]
+	location(city: String): [LocationType],
+	employeeByTitle(title: String): [EmployeeType]
 }

@@ -38,12 +38,15 @@ public class StartApplication {
 		EmployeeService employeeService = context.getBean(EmployeeService.class);
         
         HashMap<String, Object> variables = new HashMap<>();
-        variables.put("name", "Neena");
-        variables.put("salaryGreater", 5000.0);
+        variables.put("title", "Programmer");
         ClassPathResource classPathResource = new ClassPathResource("graphQL/query/employee-by-name-query.graphql");
 		String query = new String(Files.readAllBytes(Paths.get(classPathResource.getURI())));
 		executeQuery(employeeService, variables, query);
 		classPathResource = new ClassPathResource("graphQL/query/employee-by-location.graphql");
+		query = new String(Files.readAllBytes(Paths.get(classPathResource.getURI())));
+		executeQuery(employeeService, variables, query);
+		
+		classPathResource = new ClassPathResource("graphQL/query/employee-by-title.graphql");
 		query = new String(Files.readAllBytes(Paths.get(classPathResource.getURI())));
 		executeQuery(employeeService, variables, query);
 	}
